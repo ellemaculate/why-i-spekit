@@ -3,58 +3,72 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Why I Spekit — Interactive Prompt Table</title>
+  <title>Why I Spekit — Rep Story Prompts</title>
   <style>
     :root{
-      --bg:#0b1220; /* Spekit deep blue vibe */
-      --card:#121a2b;
-      --text:#eef3ff;
-      --muted:#a7b2cc;
-      --accent:#4A7AA7; /* per project brand notes */
-      --accent-2:#EC008C; /* optional accent */
+      /* Spekit-light theme */
+      --bg:#ffffff;
+      --text:#2A3348;           /* dark navy */
+      --muted:#4C5A71;          /* cool gray */
+      --border:rgba(42,51,72,.14);
+      --card:#ffffff;
+      --surface:#F8F9FB;        /* light surface */
+      --accent:#EC008C;         /* Spekit pink */
+      --accent-100:#FFCEE6;     /* light pink */
+      --accent-200:#F97FB5;     /* mid pink */
       --success:#2fbf71;
-      --warning:#ffb703;
       --radius:14px;
-      --shadow:0 8px 24px rgba(0,0,0,.25);
+      --shadow:0 6px 20px rgba(16,24,40,.08);
     }
     *{box-sizing:border-box}
-    body{margin:0;background:linear-gradient(180deg,#0b1220,#0b1220 60%,#0e1628);color:var(--text);font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";}
-    .wrap{max-width:1100px;margin:0 auto;padding:20px}
-    header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin:10px 0 16px}
-    h1{font-size:22px;letter-spacing:.2px;margin:0}
-    .sub{color:var(--muted);font-size:14px;margin-top:4px}
-    .panel{background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px}
+    html,body{height:100%}
+    body{margin:0;background:var(--surface);color:var(--text);font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji"}
+
+    .wrap{max-width:1100px;margin:0 auto;padding:24px}
+    header{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;justify-content:space-between;margin:4px 0 18px}
+    h1{font-size:24px;letter-spacing:.2px;margin:0;color:var(--text)}
+    .sub{color:var(--muted);font-size:14px;margin-top:6px}
+
+    .panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+
     .controls{display:grid;grid-template-columns:1fr 160px 160px 160px;gap:10px}
-    input[type="search"], select, button{appearance:none;border:1px solid rgba(255,255,255,.12);background:#0e1729;color:var(--text);border-radius:10px;padding:10px 12px;font-size:14px}
-    button{cursor:pointer;transition:transform .05s ease, background .2s ease}
+    input[type="search"], select, button{appearance:none;border:1px solid var(--border);background:#fff;color:var(--text);border-radius:10px;padding:10px 12px;font-size:14px}
+    input::placeholder{color:#9aa6b2}
+    button{cursor:pointer;transition:transform .05s ease, box-shadow .2s ease, background .2s ease}
     button:hover{transform:translateY(-1px)}
-    button.primary{background:var(--accent);border-color:transparent}
-    button.ghost{background:transparent}
-    button.success{background:var(--success);border-color:transparent}
+    button.primary{background:var(--accent);color:#fff;border-color:transparent;box-shadow:0 6px 18px rgba(236,0,140,.25)}
+    button.ghost{background:#fff}
+    button.success{background:var(--success);color:#fff;border-color:transparent}
+
     .table{margin-top:12px}
-    table{width:100%;border-collapse:separate;border-spacing:0;background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden}
-    thead th{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);text-align:left;padding:12px;border-bottom:1px solid rgba(255,255,255,.08);user-select:none}
-    tbody td{padding:14px 12px;vertical-align:top;border-top:1px solid rgba(255,255,255,.05)}
+    table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    thead th{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#667085;text-align:left;padding:12px;border-bottom:1px solid var(--border);user-select:none}
+    tbody td{padding:14px 12px;vertical-align:top;border-top:1px solid var(--border)}
     tbody tr:first-child td{border-top:0}
-    .tag{display:inline-block;font-size:12px;padding:4px 8px;border-radius:999px;background:#0f2238;border:1px solid rgba(255,255,255,.08);color:#9fc2e8;margin-right:6px}
+
+    .tag{display:inline-block;font-size:12px;padding:4px 8px;border-radius:999px;background:var(--accent-100);border:1px solid rgba(236,0,140,.25);color:#8A0A52;margin-right:6px}
     .row-actions{display:flex;gap:8px;flex-wrap:wrap}
     .small{font-size:12px;color:var(--muted)}
-    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;background:#041226;color:#e6f0ff;border:1px solid rgba(255,255,255,.1);padding:10px 14px;border-radius:10px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s ease}
-    .toast.show{opacity:1}
+
     .footer{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-top:12px}
     .note{color:var(--muted);font-size:12px}
-    .hidden{display:none}
-    @media (max-width:840px){
-      .controls{grid-template-columns:1fr 1fr}
-    }
+
+    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;background:#111827;color:#fff;border:1px solid rgba(255,255,255,.12);padding:10px 14px;border-radius:10px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s ease}
+    .toast.show{opacity:1}
+
     /* Modal */
-    .modal{position:fixed;inset:0;background:rgba(4,12,26,.6);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
+    .modal{position:fixed;inset:0;background:rgba(16,24,40,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
     .modal.open{display:flex}
-    .modal .box{background:var(--card);border:1px solid rgba(255,255,255,.12);border-radius:16px;box-shadow:var(--shadow);max-width:720px;width:100%;padding:18px}
+    .modal .box{background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);max-width:760px;width:100%;padding:18px}
     .modal h2{margin:0 0 8px;font-size:18px}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     .grid .full{grid-column:1 / -1}
     .modal textarea{min-height:88px}
+
+    @media (max-width:840px){
+      .controls{grid-template-columns:1fr 1fr}
+      .grid{grid-template-columns:1fr}
+    }
   </style>
 </head>
 <body>
@@ -62,10 +76,7 @@
     <header>
       <div>
         <h1>Why I Spekit — Rep Story Prompts</h1>
-        <div class="sub">Pick a prompt, tailor the story, then post with <strong>#WhyISpekit</strong> and tag <strong>@Spekit</strong>. Built to embed via iframe.</div>
-      </div>
-      <div class="row-actions">
-        <button class="ghost" id="btnHelp" title="How to use">How to use</button>
+        <div class="sub">Pick a prompt, tailor the story, then post with <strong>#WhyISpekit</strong> and tag <strong>@Spekit</strong>.</div>
       </div>
     </header>
 
@@ -109,26 +120,13 @@
         </div>
       </div>
     </div>
-
-    <details style="margin-top:14px" id="helpBox">
-      <summary style="cursor:pointer">Embed and usage</summary>
-      <div class="panel" style="margin-top:10px">
-        <p class="small">Host this HTML on any static site or CMS that allows iframes. Then embed with:</p>
-        <pre class="small" style="white-space:pre-wrap;user-select:all">&lt;iframe src="https://your-host.com/why-i-spekit-prompts.html" width="100%" height="650" style="border:0;" loading="lazy" referrerpolicy="no-referrer"&gt;&lt;/iframe&gt;</pre>
-        <p class="small">Inside Spekit, create or edit a Spek, add an iframe embed block, and paste the code above. This tool has no external scripts, so it works in most allowlisted domains.</p>
-      </div>
-    </details>
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite">Copied</div>
 
   <script>
-    const params = new URLSearchParams(location.search);
-    const admin = params.get('admin') === '1';
-    const compact = params.get('compact') === '1';
-
     const prompts = [
-      {id:1, cat:"Deal Rooms", prompt:"Deal Rooms help me close because…", angle:"Share a moment you sped up a step or handled an objection using buyer engagement signals.", ex:"Buyer spent 7 minutes on one booklet, so I focused our next call there and advanced the stage.", hashtags:"#WhyISpekit",},
+      {id:1, cat:"Deal Rooms", prompt:"Deal Rooms help me close because…", angle:"Share a moment you sped up a step or handled an objection using buyer engagement signals.", ex:"Buyer spent 7 minutes on one booklet, so I focused our next call there and advanced the stage.", hashtags:"#WhyISpekit"},
       {id:2, cat:"AI Sidekick", prompt:"When I am stuck, my AI Sidekick…", angle:"Show the prep or draft it delivered from CRM, calls, or email context.", ex:"Sidekick pulled the talk track and drafted my follow up in two minutes. I hit send with confidence.", hashtags:"#WhyISpekit"},
       {id:3, cat:"Workflow", prompt:"One thing I stopped doing since Spekit…", angle:"Describe the manual chase you cut and the time it saved.", ex:"Stopped sending five attachments. I send one Room and track engagement.", hashtags:"#WhyISpekit"},
       {id:4, cat:"Outcomes", prompt:"I used Spekit to move this deal from X to Y…", angle:"Name the stage change and the action that caused it.", ex:"Buyer looped in finance after I shared a Room tailored to their priorities.", hashtags:"#WhyISpekit"},
@@ -139,7 +137,7 @@
       {id:9, cat:"AI Sidekick", prompt:"Sidekick vs. silence: the email that got a reply…", angle:"Paste the before and after structure and the result.", ex:"Reply in 19 minutes and a booked follow up.", hashtags:"#WhyISpekit"},
       {id:10, cat:"Deal Rooms", prompt:"What my buyer clicked five times…", angle:"Turn repeated clicks into your follow-up plan.", ex:"They kept returning to security. I brought our expert and unblocked InfoSec.", hashtags:"#WhyISpekit"},
       {id:11, cat:"Workflow", prompt:"From scattered tabs to one hub…", angle:"Share how clarity reduced back and forth.", ex:"Single Room link ended the email ping pong.", hashtags:"#WhyISpekit"},
-      {id:12, cat:"Outcomes", prompt:"The small change that led to a bigger win…", angle:"Name the micro action and the macro outcome.", ex:"Added buyer-specific FAQ to the Room. CFO joined and we closed.", hashtags:"#WhyISpekit"},
+      {id:12, cat:"Outcomes", prompt:"The small change that led to a bigger win…", angle:"Name the micro action and the macro outcome.", ex:"Added buyer-specific FAQ to the Room. CFO joined and we closed.", hashtags:"#WhyISpekit"}
     ];
 
     const rows = document.getElementById('rows');
@@ -150,8 +148,6 @@
     const buildFromSelected = document.getElementById('buildFromSelected');
     const clearSelection = document.getElementById('clearSelection');
     const toast = document.getElementById('toast');
-    const btnHelp = document.getElementById('btnHelp');
-    const helpBox = document.getElementById('helpBox');
 
     let selectedId = null;
 
@@ -169,7 +165,6 @@
         <tr data-id="${p.id}" ${selectedId===p.id?"style='outline:2px solid var(--accent);'":''}>
           <td>
             <div style="font-weight:600">${escapeHtml(p.prompt)}</div>
-            ${admin ? `<div class=\"small\">ID: ${p.id}</div>` : ''}
           </td>
           <td>
             <div>${escapeHtml(p.angle)}</div>
@@ -213,26 +208,14 @@
     }
     function copyExample(id){
       const p = prompts.find(x=>x.id===id);
-      copyText(`${p.prompt}\n\n${p.angle}\nExample: ${p.ex}`);
+      copyText(`${p.prompt}
+
+${p.angle}
+Example: ${p.ex}`);
     }
     function selectRow(id){
       selectedId = selectedId===id?null:id;
       render();
-
-    // Toggle admin-only help + compact padding
-    const help = document.getElementById('helpBox');
-    if(help) help.style.display = admin ? '' : 'none';
-    const foot = document.getElementById('footerNote');
-    if(foot && compact) foot.style.display = 'none';
-
-    // Modal bindings (safe if modal not present)
-    const btnT = document.getElementById('btnBuildText');
-    const btnV = document.getElementById('btnBuildVideo');
-    const btnC = document.getElementById('btnCloseModal');
-    if(btnT) btnT.addEventListener('click', ()=>buildUserDraft('text'));
-    if(btnV) btnV.addEventListener('click', ()=>buildUserDraft('video'));
-    if(btnC) btnC.addEventListener('click', closeStory);
-    window.addEventListener('keydown', e=>{ if(e.key==='Escape') closeStory(); });
     }
     function randomPick(){
       const term = search.value.trim().toLowerCase();
@@ -280,28 +263,30 @@
 
     function openStoryBuilder(id){
       selectedId = id || selectedId;
-      const m = document.getElementById('storyModal');
-      if(m){ m.classList.add('open'); m.setAttribute('aria-hidden','false'); }
+      document.getElementById('storyModal').classList.add('open');
+      document.getElementById('storyModal').setAttribute('aria-hidden','false');
     }
+
     function closeStory(){
-      const m = document.getElementById('storyModal');
-      if(m){ m.classList.remove('open'); m.setAttribute('aria-hidden','true'); }
+      document.getElementById('storyModal').classList.remove('open');
+      document.getElementById('storyModal').setAttribute('aria-hidden','true');
     }
+
     function buildUserDraft(format){
       const p = prompts.find(x=>x.id===selectedId) || prompts[0];
-      const role = (document.getElementById('fRole')||{}).value?.trim()||'';
-      const stage = (document.getElementById('fStage')||{}).value?.trim()||'';
-      const tool = (document.getElementById('fTool')||{}).value?.trim()||'';
-      const blocker = (document.getElementById('fBlocker')||{}).value?.trim()||'';
-      const action = (document.getElementById('fAction')||{}).value?.trim()||'';
-      const outcome = (document.getElementById('fOutcome')||{}).value?.trim()||'';
-      const reflection = (document.getElementById('fReflection')||{}).value?.trim()||'';
+      const role = document.getElementById('fRole').value.trim();
+      const stage = document.getElementById('fStage').value.trim();
+      const tool = document.getElementById('fTool').value.trim();
+      const blocker = document.getElementById('fBlocker').value.trim();
+      const action = document.getElementById('fAction').value.trim();
+      const outcome = document.getElementById('fOutcome').value.trim();
+      const reflection = document.getElementById('fReflection').value.trim();
 
       if(format==='video'){
         const script = [
           `Scene 1 (5s): Intro — ${role||'Rep'}, stage ${stage||'—'}.`,
           `Scene 2 (10s): Blocker — ${blocker||'—'}`,
-          `Scene 3 (20s): What I did with ${tool||p.cat} — ${action||'—'}`,
+          `Scene 3 (20s): What I did with ${tool || p.cat} — ${action||'—'}`,
           `Scene 4 (15s): Outcome — ${outcome||'—'}`,
           `Scene 5 (10s): Closing — ${reflection?('I would repeat: '+reflection):'—'}`,
           `CTA: Tag @Spekit #WhyISpekit by Oct 31. First 20 by Oct 21 get $50. Videos count 5x. One rep plays Deal or No Deal Live for up to $1,000.`
@@ -310,11 +295,11 @@
         copyText(script);
       } else {
         const post = [
-          `${role?role+' here. ':''}Stage: ${stage||'—'}.`,
-          `Blocker: ${blocker||'—'}.`,
-          `What I did with ${tool||p.cat}: ${action||'—'}.`,
-          `Outcome: ${outcome||'—'}.`,
-          `${reflection?('I would repeat: '+reflection):''}`,
+          `${role ? role + ' here. ' : ''}Stage: ${stage || '—'}.`,
+          `Blocker: ${blocker || '—'}.`,
+          `What I did with ${tool || p.cat}: ${action || '—'}.`,
+          `Outcome: ${outcome || '—'}.`,
+          `${reflection ? 'I would repeat: ' + reflection : ''}`,
           `Tag @Spekit and add #WhyISpekit by October 31. First 20 by October 21 get $50. Videos count 5x. One rep plays Deal or No Deal Live for up to $1,000.`
         ].filter(Boolean).join("
 
@@ -332,11 +317,11 @@
     clearSelection.addEventListener('click', ()=>{ selectedId=null; render(); });
     randomPrompt.addEventListener('click', randomPick);
     [search, filterCategory, sortBy].forEach(el=>el.addEventListener('input', render));
-    btnHelp.addEventListener('click', ()=>{ helpBox.open = !helpBox.open; });
 
     render();
   </script>
-  <!-- Story Builder Modal (hidden by default) -->
+
+  <!-- Story Builder Modal -->
   <div class="modal" id="storyModal" aria-hidden="true">
     <div class="box">
       <h2>Build your post or 60 second video script</h2>
