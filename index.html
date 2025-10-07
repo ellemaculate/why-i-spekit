@@ -47,6 +47,14 @@
     @media (max-width:840px){
       .controls{grid-template-columns:1fr 1fr}
     }
+    /* Modal */
+    .modal{position:fixed;inset:0;background:rgba(4,12,26,.6);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
+    .modal.open{display:flex}
+    .modal .box{background:var(--card);border:1px solid rgba(255,255,255,.12);border-radius:16px;box-shadow:var(--shadow);max-width:720px;width:100%;padding:18px}
+    .modal h2{margin:0 0 8px;font-size:18px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .grid .full{grid-column:1 / -1}
+    .modal textarea{min-height:88px}
   </style>
 </head>
 <body>
@@ -93,8 +101,10 @@
         </table>
       </div>
 
-      <div class="footer">
+      <div class="footer" id="footerNote">
         <div class="note">Tip: Use the "Build post" button to copy a ready-to-post draft with tags and the Oct 31 timeline.</div>
+        <div class="row-actions">
+          <button id="bu
         <div class="row-actions">
           <button id="buildFromSelected" class="success">Build post from selected</button>
           <button id="clearSelection" class="ghost">Clear selection</button>
