@@ -101,10 +101,8 @@
         </table>
       </div>
 
-      <div class="footer" id="footerNote">
+      <div class="footer">
         <div class="note">Tip: Use the "Build post" button to copy a ready-to-post draft with tags and the Oct 31 timeline.</div>
-        <div class="row-actions">
-          <button id="bu
         <div class="row-actions">
           <button id="buildFromSelected" class="success">Build post from selected</button>
           <button id="clearSelection" class="ghost">Clear selection</button>
@@ -125,6 +123,10 @@
   <div class="toast" id="toast" role="status" aria-live="polite">Copied</div>
 
   <script>
+    const params = new URLSearchParams(location.search);
+    const admin = params.get('admin') === '1';
+    const compact = params.get('compact') === '1';
+
     const prompts = [
       {id:1, cat:"Deal Rooms", prompt:"Deal Rooms help me close because…", angle:"Share a moment you sped up a step or handled an objection using buyer engagement signals.", ex:"Buyer spent 7 minutes on one booklet, so I focused our next call there and advanced the stage.", hashtags:"#WhyISpekit",},
       {id:2, cat:"AI Sidekick", prompt:"When I am stuck, my AI Sidekick…", angle:"Show the prep or draft it delivered from CRM, calls, or email context.", ex:"Sidekick pulled the talk track and drafted my follow up in two minutes. I hit send with confidence.", hashtags:"#WhyISpekit"},
@@ -167,7 +169,7 @@
         <tr data-id="${p.id}" ${selectedId===p.id?"style='outline:2px solid var(--accent);'":''}>
           <td>
             <div style="font-weight:600">${escapeHtml(p.prompt)}</div>
-            <div class="small">ID: ${p.id}</div>
+            ${admin ? `<div class=\"small\">ID: ${p.id}</div>` : ''}
           </td>
           <td>
             <div>${escapeHtml(p.angle)}</div>
@@ -180,6 +182,7 @@
               <button onclick="copyExample(${p.id})">Copy example</button>
               <button onclick="selectRow(${p.id})" class="ghost">${selectedId===p.id?'Selected':'Select'}</button>
               <button onclick="buildPost(${p.id})" class="primary">Build post</button>
+              <button onclick="openStoryBuilder(${p.id})">Story builder</button>
             </div>
           </td>
         </tr>
@@ -215,6 +218,21 @@
     function selectRow(id){
       selectedId = selectedId===id?null:id;
       render();
+
+    // Toggle admin-only help + compact padding
+    const help = document.getElementById('helpBox');
+    if(help) help.style.display = admin ? '' : 'none';
+    const foot = document.getElementById('footerNote');
+    if(foot && compact) foot.style.display = 'none';
+
+    // Modal bindings (safe if modal not present)
+    const btnT = document.getElementById('btnBuildText');
+    const btnV = document.getElementById('btnBuildVideo');
+    const btnC = document.getElementById('btnCloseModal');
+    if(btnT) btnT.addEventListener('click', ()=>buildUserDraft('text'));
+    if(btnV) btnV.addEventListener('click', ()=>buildUserDraft('video'));
+    if(btnC) btnC.addEventListener('click', closeStory);
+    window.addEventListener('keydown', e=>{ if(e.key==='Escape') closeStory(); });
     }
     function randomPick(){
       const term = search.value.trim().toLowerCase();
@@ -244,7 +262,6 @@
 
     function buildDraft(p){
       const lines = [
-        // Narrative opener template
         `A rep told us this: “I used to spend one third of my day prepping for calls and pulling together follow ups. Now, I do it all in 15 minutes.”`,
         `That is the kind of moment we want to surface so other sellers can borrow it tomorrow.`,
         ``,
@@ -257,7 +274,54 @@
         `• Tag @Spekit and add #WhyISpekit by October 31`,
         `• First 20 by October 21 get $50. Videos count 5x. One rep plays Deal or No Deal Live for up to $1,000`,
       ];
-      return lines.join("\n");
+      return lines.join("
+");
+    }
+
+    function openStoryBuilder(id){
+      selectedId = id || selectedId;
+      const m = document.getElementById('storyModal');
+      if(m){ m.classList.add('open'); m.setAttribute('aria-hidden','false'); }
+    }
+    function closeStory(){
+      const m = document.getElementById('storyModal');
+      if(m){ m.classList.remove('open'); m.setAttribute('aria-hidden','true'); }
+    }
+    function buildUserDraft(format){
+      const p = prompts.find(x=>x.id===selectedId) || prompts[0];
+      const role = (document.getElementById('fRole')||{}).value?.trim()||'';
+      const stage = (document.getElementById('fStage')||{}).value?.trim()||'';
+      const tool = (document.getElementById('fTool')||{}).value?.trim()||'';
+      const blocker = (document.getElementById('fBlocker')||{}).value?.trim()||'';
+      const action = (document.getElementById('fAction')||{}).value?.trim()||'';
+      const outcome = (document.getElementById('fOutcome')||{}).value?.trim()||'';
+      const reflection = (document.getElementById('fReflection')||{}).value?.trim()||'';
+
+      if(format==='video'){
+        const script = [
+          `Scene 1 (5s): Intro — ${role||'Rep'}, stage ${stage||'—'}.`,
+          `Scene 2 (10s): Blocker — ${blocker||'—'}`,
+          `Scene 3 (20s): What I did with ${tool||p.cat} — ${action||'—'}`,
+          `Scene 4 (15s): Outcome — ${outcome||'—'}`,
+          `Scene 5 (10s): Closing — ${reflection?('I would repeat: '+reflection):'—'}`,
+          `CTA: Tag @Spekit #WhyISpekit by Oct 31. First 20 by Oct 21 get $50. Videos count 5x. One rep plays Deal or No Deal Live for up to $1,000.`
+        ].join("
+");
+        copyText(script);
+      } else {
+        const post = [
+          `${role?role+' here. ':''}Stage: ${stage||'—'}.`,
+          `Blocker: ${blocker||'—'}.`,
+          `What I did with ${tool||p.cat}: ${action||'—'}.`,
+          `Outcome: ${outcome||'—'}.`,
+          `${reflection?('I would repeat: '+reflection):''}`,
+          `Tag @Spekit and add #WhyISpekit by October 31. First 20 by October 21 get $50. Videos count 5x. One rep plays Deal or No Deal Live for up to $1,000.`
+        ].filter(Boolean).join("
+
+");
+        copyText(post);
+      }
+      showToast('Draft copied');
     }
 
     buildFromSelected.addEventListener('click', ()=>{
@@ -272,5 +336,26 @@
 
     render();
   </script>
+  <!-- Story Builder Modal (hidden by default) -->
+  <div class="modal" id="storyModal" aria-hidden="true">
+    <div class="box">
+      <h2>Build your post or 60 second video script</h2>
+      <div class="grid">
+        <input id="fRole" placeholder="Your role (AE, AM, BDR)…" />
+        <input id="fStage" placeholder="Deal stage (Discovery, Eval)…" />
+        <input id="fTool" placeholder="Tool used (Deal Rooms / AI Sidekick)" class="full" />
+        <textarea id="fBlocker" placeholder="What was the blocker?"></textarea>
+        <textarea id="fAction" placeholder="What did you do with Spekit?"></textarea>
+        <textarea id="fOutcome" placeholder="What changed (reply, meeting, stage, revenue)?"></textarea>
+        <textarea id="fReflection" placeholder="What would you repeat next time?"></textarea>
+      </div>
+      <div class="row-actions" style="margin-top:10px">
+        <button id="btnBuildText" class="primary">Copy text post</button>
+        <button id="btnBuildVideo" class="ghost">Copy 60s video script</button>
+        <button id="btnCloseModal">Close</button>
+      </div>
+      <p class="small" style="margin-top:8px">Remember to tag <strong>@Spekit</strong> and use <strong>#WhyISpekit</strong> by October 31. First 20 by October 21 get $50. Videos count 5x. One rep plays Deal or No Deal Live for up to $1,000.</p>
+    </div>
+  </div>
 </body>
 </html>
