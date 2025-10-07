@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Why I Spekit — Interactive Prompt Table</title>
+  <style>
+    :root{
+      --bg:#0b1220; /* Spekit deep blue vibe */
+      --card:#121a2b;
+      --text:#eef3ff;
+      --muted:#a7b2cc;
+      --accent:#4A7AA7; /* per project brand notes */
+      --accent-2:#EC008C; /* optional accent */
+      --success:#2fbf71;
+      --warning:#ffb703;
+      --radius:14px;
+      --shadow:0 8px 24px rgba(0,0,0,.25);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#0b1220,#0b1220 60%,#0e1628);color:var(--text);font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";}
+    .wrap{max-width:1100px;margin:0 auto;padding:20px}
+    header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin:10px 0 16px}
+    h1{font-size:22px;letter-spacing:.2px;margin:0}
+    .sub{color:var(--muted);font-size:14px;margin-top:4px}
+    .panel{background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px}
+    .controls{display:grid;grid-template-columns:1fr 160px 160px 160px;gap:10px}
+    input[type="search"], select, button{appearance:none;border:1px solid rgba(255,255,255,.12);background:#0e1729;color:var(--text);border-radius:10px;padding:10px 12px;font-size:14px}
+    button{cursor:pointer;transition:transform .05s ease, background .2s ease}
+    button:hover{transform:translateY(-1px)}
+    button.primary{background:var(--accent);border-color:transparent}
+    button.ghost{background:transparent}
+    button.success{background:var(--success);border-color:transparent}
+    .table{margin-top:12px}
+    table{width:100%;border-collapse:separate;border-spacing:0;background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden}
+    thead th{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);text-align:left;padding:12px;border-bottom:1px solid rgba(255,255,255,.08);user-select:none}
+    tbody td{padding:14px 12px;vertical-align:top;border-top:1px solid rgba(255,255,255,.05)}
+    tbody tr:first-child td{border-top:0}
+    .tag{display:inline-block;font-size:12px;padding:4px 8px;border-radius:999px;background:#0f2238;border:1px solid rgba(255,255,255,.08);color:#9fc2e8;margin-right:6px}
+    .row-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .small{font-size:12px;color:var(--muted)}
+    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;background:#041226;color:#e6f0ff;border:1px solid rgba(255,255,255,.1);padding:10px 14px;border-radius:10px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s ease}
+    .toast.show{opacity:1}
+    .footer{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-top:12px}
+    .note{color:var(--muted);font-size:12px}
+    .hidden{display:none}
+    @media (max-width:840px){
+      .controls{grid-template-columns:1fr 1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Why I Spekit — Rep Story Prompts</h1>
+        <div class="sub">Pick a prompt, tailor the story, then post with <strong>#WhyISpekit</strong> and tag <strong>@Spekit</strong>. Built to embed via iframe.</div>
+      </div>
+      <div class="row-actions">
+        <button class="ghost" id="btnHelp" title="How to use">How to use</button>
+      </div>
+    </header>
+
+    <div class="panel">
+      <div class="controls">
+        <input id="search" type="search" placeholder="Search prompts, keywords, or outcomes…" />
+        <select id="filterCategory" title="Filter by Category">
+          <option value="">All categories</option>
+          <option>Deal Rooms</option>
+          <option>AI Sidekick</option>
+          <option>Workflow</option>
+          <option>Outcomes</option>
+        </select>
+        <select id="sortBy" title="Sort">
+          <option value="default">Sort: Default</option>
+          <option value="category">Sort: Category</option>
+          <option value="alpha">Sort: A → Z</option>
+        </select>
+        <button id="randomPrompt" class="primary" title="Give me a prompt">Random prompt</button>
+      </div>
+
+      <div class="table" role="region" aria-label="Prompt table" tabindex="0">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:26%">Prompt</th>
+              <th style="width:34%">Example angle</th>
+              <th style="width:16%">Category</th>
+              <th style="width:24%">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+
+      <div class="footer">
+        <div class="note">Tip: Use the "Build post" button to copy a ready-to-post draft with tags and the Oct 31 timeline.</div>
+        <div class="row-actions">
+          <button id="buildFromSelected" class="success">Build post from selected</button>
+          <button id="clearSelection" class="ghost">Clear selection</button>
+        </div>
+      </div>
+    </div>
+
+    <details style="margin-top:14px" id="helpBox">
+      <summary style="cursor:pointer">Embed and usage</summary>
+      <div class="panel" style="margin-top:10px">
+        <p class="small">Host this HTML on any static site or CMS that allows iframes. Then embed with:</p>
+        <pre class="small" style="white-space:pre-wrap;user-select:all">&lt;iframe src="https://your-host.com/why-i-spekit-prompts.html" width="100%" height="650" style="border:0;" loading="lazy" referrerpolicy="no-referrer"&gt;&lt;/iframe&gt;</pre>
+        <p class="small">Inside Spekit, create or edit a Spek, add an iframe embed block, and paste the code above. This tool has no external scripts, so it works in most allowlisted domains.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">Copied</div>
+
+  <script>
+    const prompts = [
+      {id:1, cat:"Deal Rooms", prompt:"Deal Rooms help me close because…", angle:"Share a moment you sped up a step or handled an objection using buyer engagement signals.", ex:"Buyer spent 7 minutes on one booklet, so I focused our next call there and advanced the stage.", hashtags:"#WhyISpekit",},
+      {id:2, cat:"AI Sidekick", prompt:"When I am stuck, my AI Sidekick…", angle:"Show the prep or draft it delivered from CRM, calls, or email context.", ex:"Sidekick pulled the talk track and drafted my follow up in two minutes. I hit send with confidence.", hashtags:"#WhyISpekit"},
+      {id:3, cat:"Workflow", prompt:"One thing I stopped doing since Spekit…", angle:"Describe the manual chase you cut and the time it saved.", ex:"Stopped sending five attachments. I send one Room and track engagement.", hashtags:"#WhyISpekit"},
+      {id:4, cat:"Outcomes", prompt:"I used Spekit to move this deal from X to Y…", angle:"Name the stage change and the action that caused it.", ex:"Buyer looped in finance after I shared a Room tailored to their priorities.", hashtags:"#WhyISpekit"},
+      {id:5, cat:"AI Sidekick", prompt:"What Sidekick recommended that changed my next step…", angle:"Tie the suggestion to a result.", ex:"Recommended a case study for my industry. Got a same day reply.", hashtags:"#WhyISpekit"},
+      {id:6, cat:"Deal Rooms", prompt:"The signal in my Deal Room that changed my plan…", angle:"Point to a specific view, time on page, or asset.", ex:"Three views from legal on pricing. I pulled in our champion to align.", hashtags:"#WhyISpekit"},
+      {id:7, cat:"Workflow", prompt:"My one link follow-up ritual…", angle:"Explain how you curate and update one link that stays current.", ex:"Update once, everyone sees the latest. Zero version confusion.", hashtags:"#WhyISpekit"},
+      {id:8, cat:"Outcomes", prompt:"The 15 minute prep that replaced my old hour…", angle:"List the steps Sidekick shortened and what that freed up.", ex:"Talk track, assets, and next steps in one place. I focused on discovery.", hashtags:"#WhyISpekit"},
+      {id:9, cat:"AI Sidekick", prompt:"Sidekick vs. silence: the email that got a reply…", angle:"Paste the before and after structure and the result.", ex:"Reply in 19 minutes and a booked follow up.", hashtags:"#WhyISpekit"},
+      {id:10, cat:"Deal Rooms", prompt:"What my buyer clicked five times…", angle:"Turn repeated clicks into your follow-up plan.", ex:"They kept returning to security. I brought our expert and unblocked InfoSec.", hashtags:"#WhyISpekit"},
+      {id:11, cat:"Workflow", prompt:"From scattered tabs to one hub…", angle:"Share how clarity reduced back and forth.", ex:"Single Room link ended the email ping pong.", hashtags:"#WhyISpekit"},
+      {id:12, cat:"Outcomes", prompt:"The small change that led to a bigger win…", angle:"Name the micro action and the macro outcome.", ex:"Added buyer-specific FAQ to the Room. CFO joined and we closed.", hashtags:"#WhyISpekit"},
+    ];
+
+    const rows = document.getElementById('rows');
+    const search = document.getElementById('search');
+    const filterCategory = document.getElementById('filterCategory');
+    const sortBy = document.getElementById('sortBy');
+    const randomPrompt = document.getElementById('randomPrompt');
+    const buildFromSelected = document.getElementById('buildFromSelected');
+    const clearSelection = document.getElementById('clearSelection');
+    const toast = document.getElementById('toast');
+    const btnHelp = document.getElementById('btnHelp');
+    const helpBox = document.getElementById('helpBox');
+
+    let selectedId = null;
+
+    function render(){
+      const term = search.value.trim().toLowerCase();
+      let list = prompts.filter(p=>{
+        const blob = `${p.prompt} ${p.angle} ${p.ex} ${p.cat}`.toLowerCase();
+        const catOk = !filterCategory.value || p.cat === filterCategory.value;
+        return catOk && (!term || blob.includes(term));
+      });
+      if(sortBy.value==='category') list.sort((a,b)=>a.cat.localeCompare(b.cat)||a.prompt.localeCompare(b.prompt));
+      if(sortBy.value==='alpha') list.sort((a,b)=>a.prompt.localeCompare(b.prompt));
+
+      rows.innerHTML = list.map(p=>`
+        <tr data-id="${p.id}" ${selectedId===p.id?"style='outline:2px solid var(--accent);'":''}>
+          <td>
+            <div style="font-weight:600">${escapeHtml(p.prompt)}</div>
+            <div class="small">ID: ${p.id}</div>
+          </td>
+          <td>
+            <div>${escapeHtml(p.angle)}</div>
+            <div class="small" style="margin-top:6px;opacity:.9"><em>Example:</em> ${escapeHtml(p.ex)}</div>
+          </td>
+          <td><span class="tag">${escapeHtml(p.cat)}</span></td>
+          <td>
+            <div class="row-actions">
+              <button onclick="copyPrompt(${p.id})">Copy prompt</button>
+              <button onclick="copyExample(${p.id})">Copy example</button>
+              <button onclick="selectRow(${p.id})" class="ghost">${selectedId===p.id?'Selected':'Select'}</button>
+              <button onclick="buildPost(${p.id})" class="primary">Build post</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function escapeHtml(s){
+      return s.replace(/[&<>\"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
+    }
+
+    function showToast(msg='Copied'){
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(()=>toast.classList.remove('show'), 1600);
+    }
+
+    function copyText(text){
+      navigator.clipboard.writeText(text).then(()=>showToast('Copied to clipboard'))
+        .catch(()=>{
+          const ta=document.createElement('textarea');
+          ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();showToast('Copied');
+        });
+    }
+
+    function copyPrompt(id){
+      const p = prompts.find(x=>x.id===id);
+      copyText(p.prompt);
+    }
+    function copyExample(id){
+      const p = prompts.find(x=>x.id===id);
+      copyText(`${p.prompt}\n\n${p.angle}\nExample: ${p.ex}`);
+    }
+    function selectRow(id){
+      selectedId = selectedId===id?null:id;
+      render();
+    }
+    function randomPick(){
+      const term = search.value.trim().toLowerCase();
+      const cat = filterCategory.value;
+      const pool = prompts.filter(p=>{
+        const blob = `${p.prompt} ${p.angle} ${p.ex} ${p.cat}`.toLowerCase();
+        const catOk = !cat || p.cat===cat;
+        return catOk && (!term || blob.includes(term));
+      });
+      if(pool.length){
+        const p = pool[Math.floor(Math.random()*pool.length)];
+        selectedId = p.id; render();
+        showToast('Selected a random prompt');
+        scrollIntoViewId(p.id);
+      }
+    }
+    function scrollIntoViewId(id){
+      const el = rows.querySelector(`tr[data-id='${id}']`);
+      if(el) el.scrollIntoView({behavior:'smooth', block:'center'});
+    }
+
+    function buildPost(id){
+      const p = prompts.find(x=>x.id===id);
+      const draft = buildDraft(p);
+      copyText(draft);
+    }
+
+    function buildDraft(p){
+      const lines = [
+        // Narrative opener template
+        `A rep told us this: “I used to spend one third of my day prepping for calls and pulling together follow ups. Now, I do it all in 15 minutes.”`,
+        `That is the kind of moment we want to surface so other sellers can borrow it tomorrow.`,
+        ``,
+        `Try this prompt: ${p.prompt}`,
+        `${p.angle}`,
+        `Example: ${p.ex}`,
+        ``,
+        `How to enter`,
+        `• Post a 60 second video or a short write up mentioning Deal Rooms or AI Sidekick`,
+        `• Tag @Spekit and add #WhyISpekit by October 31`,
+        `• First 20 by October 21 get $50. Videos count 5x. One rep plays Deal or No Deal Live for up to $1,000`,
+      ];
+      return lines.join("\n");
+    }
+
+    buildFromSelected.addEventListener('click', ()=>{
+      if(!selectedId){ showToast('Select a row first'); return; }
+      const p = prompts.find(x=>x.id===selectedId);
+      copyText(buildDraft(p));
+    });
+    clearSelection.addEventListener('click', ()=>{ selectedId=null; render(); });
+    randomPrompt.addEventListener('click', randomPick);
+    [search, filterCategory, sortBy].forEach(el=>el.addEventListener('input', render));
+    btnHelp.addEventListener('click', ()=>{ helpBox.open = !helpBox.open; });
+
+    render();
+  </script>
+</body>
+</html>
